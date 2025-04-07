@@ -17,9 +17,9 @@ print('[*] Installing AWS cli')
 
 aws_version_result = subprocess.run(['which', 'aws'], capture_output=True, text=True)
 
-install_aws_cmd = '''
-    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "~/awscliv2.zip"
-    unzip ~/awscliv2.zip
+install_aws_cmd = f'''
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "{user_home}/awscliv2.zip"
+    unzip {user_home}/awscliv2.zip
     sudo ./aws/install
 '''
 
