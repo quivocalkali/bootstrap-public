@@ -84,9 +84,9 @@ else:
 
 print('[*] Authing GitHub CLI', file=sys.stderr)
 
-auth_gh_cmd = f'echo {get_pat_result.stdout} | gh auth login --with-token'
+auth_gh_cmd = f'gh auth login --with-token'
 
-auth_gh_result = subprocess.run(auth_gh_cmd, shell=True, capture_output=True, text=True)
+auth_gh_result = subprocess.run(auth_gh_cmd, shell=True, capture_output=True, text=True, input=get_pat_result.stdout)
 
 if auth_gh_result.returncode == 0:
     print("[+] GitHub CLI auth successful!")
