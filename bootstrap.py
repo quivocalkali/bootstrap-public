@@ -57,7 +57,7 @@ if not gh_cli_installed:
 
 if gh_cli_installed:
     print("[*] GitHub CLI already installed")
-if install_gh_result.returncode == 0:
+elif install_gh_result.returncode == 0:
     print("[+] GitHub CLI install successful!")
 else:
     print("[-] GitHub CLI install error:")
