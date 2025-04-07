@@ -13,28 +13,7 @@ user_home = os.path.expanduser("~")
 
 os.system('sudo echo "[*] User password accepted"')
 
-print('[*] Installing AWS CLI')
-
-aws_version_result = subprocess.run(['which', 'aws'], capture_output=True, text=True)
-
-install_aws_cmd = f'''
-    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "{user_home}/awscliv2.zip"
-    unzip {user_home}/awscliv2.zip
-    sudo ./aws/install
-'''
-
-aws_cli_installed = aws_version_result.returncode == 0
-
-if not aws_cli_installed:
-    install_aws_cli_result = subprocess.run(install_aws_cmd, shell=True, capture_output=True, text=True)
-
-if aws_cli_installed:
-    print("[*] AWS CLI already installed")
-elif install_aws_cli_result.returncode == 0:
-    print("[+] AWS CLI install successful!")
-else:
-    print("[-] AWS CLI install error:")
-    print(install_aws_cli_result.stderr)
+# *********************************
 
 print('[*] Installing GitHub CLI')
 
@@ -63,6 +42,33 @@ else:
     print("[-] GitHub CLI install error:")
     print(install_gh_result.stderr)
 
+# *********************************
+
+print('[*] Installing AWS CLI')
+
+aws_version_result = subprocess.run(['which', 'aws'], capture_output=True, text=True)
+
+install_aws_cmd = f'''
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "{user_home}/awscliv2.zip"
+    unzip {user_home}/awscliv2.zip
+    sudo ./aws/install
+'''
+
+aws_cli_installed = aws_version_result.returncode == 0
+
+if not aws_cli_installed:
+    install_aws_cli_result = subprocess.run(install_aws_cmd, shell=True, capture_output=True, text=True)
+
+if aws_cli_installed:
+    print("[*] AWS CLI already installed")
+elif install_aws_cli_result.returncode == 0:
+    print("[+] AWS CLI install successful!")
+else:
+    print("[-] AWS CLI install error:")
+    print(install_aws_cli_result.stderr)
+
+# *********************************
+
 print('[*] Fetching PAT from AWS', file=sys.stderr)
 
 get_pat_cmd = f'aws ssm get-parameters --name "/kali/tomguerneykali-pat" --with-decryption --query "Parameters[*].Value" --output text'
@@ -73,6 +79,20 @@ if get_pat_result.returncode == 0:
 else:
     print("[-] PAT retrieval error:")
     print(get_pat_result.stderr)
+
+# *********************************
+
+print('[*] Authing GitHub CLI', file=sys.stderr)
+
+auth_gh_cmd = f'echo {get_pat_result.stdout} | gh auth login --with-token'
+
+auth_gh_result = subprocess.run(auth_gh_cmd, shell=True, capture_output=True, text=True)
+
+if auth_gh_result.returncode == 0:
+    print("[+] GitHub CLI auth successful!")
+else:
+    print("[-] GitHub CLI auth error:")
+    print(auth_gh_result.stderr)
 
 # *********************************
 
