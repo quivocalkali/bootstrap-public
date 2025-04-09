@@ -40,20 +40,19 @@ else:
 
 # *********************************
 
-# print('[*] Unlocking gnome keyring')
+print('[*] Starting gnome keyring')
 
-# start_gnome_keyring_cmd = '''
-#     eval $(gnome-keyring-daemon --start --components=secrets)
-#     export $(gnome-keyring-daemon --start)
-# '''
+start_gnome_keyring_cmd = '''
+     eval $(gnome-keyring-daemon --start)
+'''
 
-# start_gnome_keyring_result = subprocess.run(start_gnome_keyring_cmd, shell=True, capture_output=True, text=True)
+start_gnome_keyring_result = subprocess.run(start_gnome_keyring_cmd, shell=True, capture_output=True, text=True)
 
-# if start_gnome_keyring_result.returncode == 0:
-#     print("[+] gnome-keyring started successfully!")
-# else:
-#     print("[-] gnome-keyring error:")
-#     print(start_gnome_keyring_result.stderr)
+if start_gnome_keyring_result.returncode == 0:
+    print("[+] gnome-keyring started successfully!")
+else:
+    print("[-] gnome-keyring error:")
+    print(start_gnome_keyring_result.stderr)
 
 # *********************************
 
