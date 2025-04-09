@@ -84,7 +84,7 @@ else:
 
 print('[*] Authing GitHub CLI', file=sys.stderr)
 
-auth_gh_cmd = f'gh auth login --with-token'
+auth_gh_cmd = f'gh auth login --with-token --secure-storage'
 
 auth_gh_result = subprocess.run(auth_gh_cmd, shell=True, capture_output=True, text=True, input=get_pat_result.stdout)
 
