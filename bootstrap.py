@@ -2,113 +2,90 @@
 Export AWS kali secrets environment variables before running
 '''
 import os
+import getpass
 import subprocess
 import sys
 import time
 import webbrowser
 
+def run_cmd(cmd, name, input=None):
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, input=input)
+    success = result.returncode == 0
+    
+    if success:
+        print(f"[+] {name} command successful")
+    else:
+        print(f"[-] {name} command error:")
+        print(result.stderr)
+
+    return { "success": success, "stdout": result.stdout }
+
 # *********************************
 
 user_home = os.path.expanduser("~")
 
-os.system('sudo echo "[*] User password accepted"')
+# *********************************
+
+password = getpass.getpass("Enter password: ")
+
+run_cmd(f'sudo -S echo "[*] User password accepted"', "Validate password", password)
 
 # *********************************
 
 print('[*] Installing AWS CLI')
 
-aws_version_result = subprocess.run(['which', 'aws'], capture_output=True, text=True)
-
-install_aws_cmd = f'''
-    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "{user_home}/awscliv2.zip"
-    unzip {user_home}/awscliv2.zip
-    sudo ./aws/install
-'''
-
-aws_cli_installed = aws_version_result.returncode == 0
+aws_cli_installed = run_cmd('which aws', "Check AWS CLI installation")["success"]
 
 if not aws_cli_installed:
-    install_aws_cli_result = subprocess.run(install_aws_cmd, shell=True, capture_output=True, text=True)
-
-if aws_cli_installed:
-    print("[*] AWS CLI already installed")
-elif install_aws_cli_result.returncode == 0:
-    print("[+] AWS CLI install successful!")
+    install_aws_cli_result = run_cmd(f'''
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "{user_home}/awscliv2.zip"
+        unzip {user_home}/awscliv2.zip
+        sudo ./aws/install
+    ''', "Install AWS CLI")
 else:
-    print("[-] AWS CLI install error:")
-    print(install_aws_cli_result.stderr)
+    print("[*] AWS CLI already installed")
+
 
 # *********************************
 
-print('[*] Starting gnome keyring')
+print('[*] Removing existing gnome keyring')
 
-start_gnome_keyring_cmd = '''
-     eval $(echo "kali" | gnome-keyring-daemon --replace --unlock)
-'''
+run_cmd("rm ~/.local/share/keyrings/login.keyring", "Remove existing gnome keyring")
 
-start_gnome_keyring_result = subprocess.run(start_gnome_keyring_cmd, shell=True, capture_output=True, text=True)
+print('[*] Unlocking gnome keyring')
 
-if start_gnome_keyring_result.returncode == 0:
-    print("[+] gnome-keyring started successfully!")
-else:
-    print("[-] gnome-keyring error:")
-    print(start_gnome_keyring_result.stderr)
+run_cmd(f'gnome-keyring-daemon --replace --unlock', "Unlock gnome keyring", password)
 
 # *********************************
 
 print('[*] Installing GitHub CLI')
 
-gh_version_result = subprocess.run(['which', 'gh'], capture_output=True, text=True)
-
-install_gh_cmd = '''
-    sudo mkdir -p -m 755 /etc/apt/keyrings \
-    && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-    && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
-    && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-    && sudo apt update \
-    && sudo apt install gh -y
-'''
-
-gh_cli_installed = gh_version_result.returncode == 0
+gh_cli_installed = run_cmd('which gh', "Check GitHub CLI installation")
 
 if not gh_cli_installed:
-    install_gh_result = subprocess.run(install_gh_cmd, shell=True, capture_output=True, text=True)
-
-if gh_cli_installed:
-    print("[*] GitHub CLI already installed")
-elif install_gh_result.returncode == 0:
-    print("[+] GitHub CLI install successful!")
+    run_cmd('''
+        sudo mkdir -p -m 755 /etc/apt/keyrings \
+        && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+        && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+        && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+        && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+        && sudo apt update \
+        && sudo apt install gh -y
+    ''', "Install GitHub CLI")
 else:
-    print("[-] GitHub CLI install error:")
-    print(install_gh_result.stderr)
+    print("[*] GitHub CLI already installed")
 
 # *********************************
 
 print('[*] Fetching PAT from AWS', file=sys.stderr)
 
-get_pat_cmd = f'aws ssm get-parameters --name "/kali/tomguerneykali-pat" --with-decryption --query "Parameters[*].Value" --output text'
-get_pat_result = subprocess.run(get_pat_cmd, shell=True, capture_output=True, text=True)
-
-if get_pat_result.returncode == 0:
-    print("[+] PAT retrieval successful!")
-else:
-    print("[-] PAT retrieval error:")
-    print(get_pat_result.stderr)
+github_pat = run_cmd(f'aws ssm get-parameters --name "/kali/tomguerneykali-pat" --with-decryption --query "Parameters[*].Value" --output text', "Fetch GitHub PAT from AWS")["stdout"]
 
 # *********************************
 
 print('[*] Authing GitHub CLI', file=sys.stderr)
 
-auth_gh_cmd = f'gh auth login --with-token'
-
-auth_gh_result = subprocess.run(auth_gh_cmd, shell=True, capture_output=True, text=True, input=get_pat_result.stdout)
-
-if auth_gh_result.returncode == 0:
-    print("[+] GitHub CLI auth successful!")
-else:
-    print("[-] GitHub CLI auth error:")
-    print(auth_gh_result.stderr)
+run_cmd('gh auth login --with-token', "Auth GitHub CLI", github_pat)
 
 # *********************************
 
@@ -123,18 +100,18 @@ os.system("pkill firefox")
 
 print('[*] Cloning ansible repo')
 
-os.system("gh repo clone tomguerneykali/ansible")
+run_cmd("gh repo clone tomguerneykali/ansible", "Clone ansible repo")
 
 # *********************************
 
 print('[*] Updating apt')
-os.system('sudo apt update')
+run_cmd('sudo apt update', "Update apt")
 
 print('[*] Installing ansible')
-os.system('sudo apt install ansible-core -y')
+run_cmd('sudo apt install ansible-core -y', "Install ansible")
 
-print('[*] Symlinking python')
 if not os.path.exists('/usr/bin/python'):
-    os.system('sudo ln -s /usr/bin/python3 /usr/bin/python')
+    print('[*] Symlinking python')
+    run_cmd('sudo ln -s /usr/bin/python3 /usr/bin/python', "Symlink python")
 
 print('[*] Run ansible playbook: ansible-playbook ./ansible/playbook.yml (with --skip-tags if necessary)')
