@@ -43,7 +43,7 @@ else:
 print('[*] Starting gnome keyring')
 
 start_gnome_keyring_cmd = '''
-     eval $(gnome-keyring-daemon --start)
+     eval $(echo "kali" | gnome-keyring-daemon --replace --unlock)
 '''
 
 start_gnome_keyring_result = subprocess.run(start_gnome_keyring_cmd, shell=True, capture_output=True, text=True)
