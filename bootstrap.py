@@ -40,6 +40,23 @@ else:
 
 # *********************************
 
+# print('[*] Unlocking gnome keyring')
+
+# start_gnome_keyring_cmd = '''
+#     eval $(gnome-keyring-daemon --start --components=secrets)
+#     export $(gnome-keyring-daemon --start)
+# '''
+
+# start_gnome_keyring_result = subprocess.run(start_gnome_keyring_cmd, shell=True, capture_output=True, text=True)
+
+# if start_gnome_keyring_result.returncode == 0:
+#     print("[+] gnome-keyring started successfully!")
+# else:
+#     print("[-] gnome-keyring error:")
+#     print(start_gnome_keyring_result.stderr)
+
+# *********************************
+
 print('[*] Installing GitHub CLI')
 
 gh_version_result = subprocess.run(['which', 'gh'], capture_output=True, text=True)
@@ -84,7 +101,7 @@ else:
 
 print('[*] Authing GitHub CLI', file=sys.stderr)
 
-auth_gh_cmd = f'gh auth login --with-token --secure-storage'
+auth_gh_cmd = f'gh auth login --with-token'
 
 auth_gh_result = subprocess.run(auth_gh_cmd, shell=True, capture_output=True, text=True, input=get_pat_result.stdout)
 
