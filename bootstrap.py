@@ -8,15 +8,18 @@ import sys
 import time
 import webbrowser
 
-def run_cmd(cmd, name, input=None):
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, input=input)
+def run_cmd(cmd, name, input=None, check=True, capture_output=None):
+    result = subprocess.run(cmd, shell=True, capture_output=capture_output, text=True, input=input, check=check)
     success = result.returncode == 0
     
     if success:
         print(f"[+] {name} command successful")
     else:
-        print(f"[-] {name} command error:")
-        print(result.stderr)
+        if check:
+            print(f"[-] {name} command error:")
+            if result.stderr: print(result.stderr)
+        else:
+            print(f"[!] {name} command returned code {result.returncode}")
 
     return { "success": success, "stdout": result.stdout }
 
@@ -34,7 +37,7 @@ run_cmd(f'sudo -S echo "[*] User password accepted"', "Validate password", passw
 
 print('[*] Installing AWS CLI')
 
-aws_cli_installed = run_cmd('which aws', "Check AWS CLI installation")["success"]
+aws_cli_installed = run_cmd('which aws', "Check AWS CLI installation", check=False)["success"]
 
 if not aws_cli_installed:
     install_aws_cli_result = run_cmd(f'''
@@ -60,7 +63,7 @@ run_cmd(f'gnome-keyring-daemon --replace --unlock', "Unlock gnome keyring", pass
 
 print('[*] Installing GitHub CLI')
 
-gh_cli_installed = run_cmd('which gh', "Check GitHub CLI installation")
+gh_cli_installed = run_cmd('which gh', "Check GitHub CLI installation", check=False, capture_output=False)["success"]
 
 if not gh_cli_installed:
     run_cmd('''
@@ -79,7 +82,7 @@ else:
 
 print('[*] Fetching PAT from AWS', file=sys.stderr)
 
-github_pat = run_cmd(f'aws ssm get-parameters --name "/kali/tomguerneykali-pat" --with-decryption --query "Parameters[*].Value" --output text', "Fetch GitHub PAT from AWS")["stdout"]
+github_pat = run_cmd(f'aws ssm get-parameters --name "/kali/tomguerneykali-pat" --with-decryption --query "Parameters[*].Value" --output text', "Fetch GitHub PAT from AWS", capture_output=True)["stdout"]
 
 # *********************************
 
