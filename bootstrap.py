@@ -82,7 +82,7 @@ else:
 
 print('[*] Fetching PAT from AWS', file=sys.stderr)
 
-github_pat = run_cmd(f'aws ssm get-parameters --name "/kali/tomguerneykali-pat" --with-decryption --query "Parameters[*].Value" --output text', "Fetch GitHub PAT from AWS", capture_output=True)["stdout"]
+github_pat = run_cmd(f'aws ssm get-parameters --name "/kali/quivocalkali/pat" --with-decryption --query "Parameters[*].Value" --output text', "Fetch GitHub PAT from AWS", capture_output=True)["stdout"]
 
 # *********************************
 
