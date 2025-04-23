@@ -117,4 +117,4 @@ if not os.path.exists('/usr/bin/python'):
     print('[*] Symlinking python')
     run_cmd('sudo ln -s /usr/bin/python3 /usr/bin/python', "Symlink python")
 
-print('[*] Run ansible playbook: ansible-playbook ./ansible/playbook.yml (with --skip-tags if necessary)')
+print('[*] Run ansible playbook: ansible-playbook ./ansible/playbook.yml --ask-become-pass (with --skip-tags if necessary)')
